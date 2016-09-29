@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+         http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+         http://www.springframework.org/schema/tx  http://www.springframework.org/schema/tx/spring-tx.xsd
+         http://www.springframework.org/schema/task
+         http://www.springframework.org/schema/task/spring-task.xsd">
+
+    <context:component-scan base-package="mobi.visited" />
+    <mvc:annotation-driven />
+    <tx:annotation-driven transaction-manager="visitedTXManager"/>
+    <task:annotation-driven/>
+
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:/app.properties</value>
+            </list>
+        </property>
+        <property name="ignoreUnresolvablePlaceholders" value="false"/>
+    </bean>
+
+    <bean id="visitedDBDS" primary="true" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${coredb.driver}"/>
+        <property name="url" value="${coredb.url}" />
+        <property name="username" value="${coredb.username}" />
+        <property name="password" value="${coredb.password}" />
+    </bean>
+
+    <bean id="visitedJPAAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+        <property name="database" value="${coredb.database}" />
+        <property name="showSql" value="${coredb.showSql}" />
+        <property name="generateDdl" value="${coredb.generateDdl}" />
+    </bean>
+
+    <bean id="visitedMigration" class="mobi.visited.util.MigrationManager" init-method="migrate">
+        <constructor-arg name="dataSource" ref="visitedDBDS"/>
+        <constructor-arg name="migrationName" value="visited" />
+        <constructor-arg name="locations" value="${coredb.migration.locations}"/>
+    </bean>
+
+    <bean id="visitedTXManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="visitedEntityManagerFactory" />
+    </bean>
+
+    <bean id="visitedPUManager"
+          class="org.springframework.orm.jpa.persistenceunit.DefaultPersistenceUnitManager">
+        <property name="defaultPersistenceUnitName" value="mobi.visited"/>
+        <property name="packagesToScan" value="mobi.visited"/>
+        <property name="persistenceXmlLocations"><array/></property>
+        <property name="defaultDataSource" ref="visitedDBDS"/>
+        <property name="mappingResources" value="META-INF/visited-orm.xml" />
+    </bean>
+
+    <bean id="visitedEntityManagerFactory"
+          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"
+          depends-on="visitedMigration">
+        <property name="persistenceUnitManager" ref="visitedPUManager"/>
+        <property name="jpaDialect">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect"/>
+        </property>
+        <property name="jpaVendorAdapter" ref="visitedJPAAdapter" />
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.PostgreSQL92Dialect</prop>
+                <prop key="hibernate.hbm2ddl.auto">validate</prop>
+            </props>
+        </property>
+    </bean>
+
+</beans>

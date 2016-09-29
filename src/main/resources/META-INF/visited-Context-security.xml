@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:sec="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.0.xsd
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd">
+
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:/app.properties</value>
+            </list>
+        </property>
+        <property name="ignoreUnresolvablePlaceholders" value="false"/>
+    </bean>
+
+    <sec:http pattern="/**" use-expressions="true" auto-config="false" disable-url-rewriting="false">
+        <sec:csrf disabled="true"/>
+        <sec:intercept-url pattern="/user/**" access="hasRole('ROLE_USER')" />
+        <!--<sec:intercept-url pattern="/user/**" access="isAuthenticated()" />-->
+        <sec:intercept-url pattern="/user" method="POST" access="permitAll" />
+        <sec:intercept-url pattern="/status/**" access="permitAll" />
+        <sec:intercept-url pattern="/favicon.ico" access="permitAll" />
+        <sec:headers>
+            <sec:frame-options policy="SAMEORIGIN"/>
+        </sec:headers>
+        <sec:http-basic />
+    </sec:http>
+
+    <bean name="customUserDetailsService" class="mobi.visited.security.CustomUserDetailsService"/>
+
+    <sec:authentication-manager alias="authenticationManager">
+        <sec:authentication-provider user-service-ref="customUserDetailsService">
+        </sec:authentication-provider>
+    </sec:authentication-manager>
+
+</beans>

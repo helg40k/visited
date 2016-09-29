@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <jmxConfigurator />
+
+    <property name="loggingPattern"
+              value="%d [%-5level] [%mdc] %logger{0} - %msg%n" />
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${loggingPattern}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/logstash.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/%d{yyyy_MM_dd}.logstash.log</fileNamePattern>
+            <maxHistory>1</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender>
+
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/visited.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/%d{yyyy_MM_dd}.visited.log</fileNamePattern>
+            <maxHistory>365</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${loggingPattern}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.codahale" additivity="false" level="OFF">
+    </logger>
+
+    <logger name="no.get.integrations.driver.IbsSoapDriver" additivity="false" level="DEBUG">
+        <appender-ref ref="logstash"/>
+    </logger>
+
+    <logger name="no.get.commons.log.LogbackFilter" additivity="false" level="INFO">
+        <appender-ref ref="logstash"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="file"/>
+        <appender-ref ref="logstash"/>
+    </root>
+</configuration>

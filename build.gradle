@@ -1,0 +1,111 @@
+apply plugin: 'java'
+apply plugin: 'war'
+apply plugin: 'org.akhikhl.gretty'
+
+group 'mobi.visited'
+version '1.0-SNAPSHOT'
+description = 'visited'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.akhikhl.gretty:gretty:1.2.4'
+    }
+}
+
+war {
+    destinationDir = new File('build')
+    archiveName = 'visited.war'
+    filesMatching('**/web.xml') {
+        filter {
+            it.replace('build_current_time', new Date().toString())
+        }
+    }
+}
+
+ext {
+    jettyPort = 8080
+    debugPort = 8081
+    versions = [
+            flyway                    : '3.2.1',
+            fasterxml_jackson         : '2.5.3',
+            java_mail                 : '1.4.5',
+            spring                    : '4.1.6.RELEASE',
+            spring_security           : '4.0.1.RELEASE',
+            slf4j                     : '1.7.5',
+            logback                   : '1.0.13',
+            logstash_logback_encoder  : '3.0',
+            junit                     : '4.12',
+            fest_assert               : '1.4',
+            mockito_core              : '1.9.5',
+            rest_assured              : '2.9.0',
+            jersey_test_framework_core: '2.22.2',
+            h2                        : '1.4.192',
+            usertype                  : '5.0.0.GA',
+            gson                      : '2.7',
+            hibernate                 : '5.0.1.Final',
+            postgresql                : '9.4-1203-jdbc4'
+    ]
+}
+
+processResources {
+    filesMatching('**/app.properties') {
+        filter {
+            it.replace('build_current_time', new Date().toString())
+        }
+    }
+}
+
+gretty {
+    httpPort = jettyPort
+    jvmArgs = [
+            "-Denvironment=development",
+            "-Xmx1024M",
+            "-Xrunjdwp:transport=dt_socket,address=${project.debugPort},server=y,suspend=n"
+    ]
+}
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+    compile "javax.mail:mail:${versions.java_mail}"
+    compile "org.postgresql:postgresql:${versions.postgresql}"
+    compile "org.springframework.security:spring-security-core:${versions.spring_security}"
+    compile "org.springframework.security:spring-security-web:${versions.spring_security}"
+    compile "org.springframework.security:spring-security-config:${versions.spring_security}"
+    compile "org.springframework:spring-webmvc:${versions.spring}"
+    compile "org.springframework:spring-web:${versions.spring}"
+    compile "org.springframework:spring-jdbc:${versions.spring}"
+    compile "org.springframework:spring-orm:${versions.spring}"
+    compile "org.springframework:spring-tx:${versions.spring}"
+    compile "org.slf4j:slf4j-api:${versions.slf4j}"
+    compile "org.slf4j:log4j-over-slf4j:${versions.slf4j}"
+    compile "ch.qos.logback:logback-classic:${versions.logback}"
+    compile "net.logstash.logback:logstash-logback-encoder:${versions.logstash_logback_encoder}"
+    compile "com.fasterxml.jackson.core:jackson-core:${versions.fasterxml_jackson}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${versions.fasterxml_jackson}"
+    compile("com.fasterxml.jackson.datatype:jackson-datatype-joda:${versions.fasterxml_jackson}") {
+        exclude(module: 'joda-time')
+    }
+    compile "com.google.code.gson:gson:${versions.gson}"
+    compile "org.flywaydb:flyway-core:${versions.flyway}"
+    compile "org.hibernate:hibernate-core:${versions.hibernate}"
+    compile "org.hibernate:hibernate-java8:${versions.hibernate}"
+    compile "org.hibernate:hibernate-entitymanager:${versions.hibernate}"
+    compile "org.hibernate:hibernate-c3p0:${versions.hibernate}"
+    testCompile "junit:junit:${versions.junit}"
+    testCompile "org.springframework:spring-test:${versions.spring}"
+    testCompile "org.easytesting:fest-assert:${versions.fest_assert}"
+    testCompile "org.mockito:mockito-all:${versions.mockito_core}"
+    testCompile("com.jayway.restassured:rest-assured:${versions.rest_assured}") {
+        exclude(module: 'commons-codec')
+        exclude(module: 'commons-lang3')
+    }
+    testCompile "com.h2database:h2:${versions.h2}"
+}
